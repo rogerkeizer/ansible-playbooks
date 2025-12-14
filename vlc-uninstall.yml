@@ -74,8 +74,6 @@
         state: absent
         delete_key: yes
       loop: "{{ vlc_registry_keys }}"
-      #with_items:
-      #  - "HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\VLC media player"
-      #  - "HKLM:\\SOFTWARE\\WOW6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\VLC media player"
       when: vlc_installed
+
       ignore_errors: yes
