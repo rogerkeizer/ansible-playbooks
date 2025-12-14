@@ -3,9 +3,10 @@ choco_location: "C:\\ProgramData\\chocolatey"
 nuget_cache_location: "C:\\Users\\{{ ansible_user }}\\AppData\\Local\\NuGet\\Cache"
 
 # Notepad++
+# https://notepad-plus-plus.org/news/
 notepadpp_product_id: notepad++
 notepadpp_product_name: notepadplusplus
-notepadpp_version: 8.8.8
+notepadpp_version: 8.8.9
 notepadpp_install_location: "C:\\Program Files\\Notepad++"
 notepadpp_user_location: "C:\\Users\\{{ ansible_user }}\\AppData\\Roaming\\Notepad++"
 notepadpp_install_args: /S
@@ -22,4 +23,5 @@ vlc_installer_path: "C:\\Temp\\vlc-installer.exe"
 vlc_download_url: "https://get.videolan.org/vlc/3.0.21/win64/vlc-3.0.21-win64.exe"
 vlc_registry_keys:
   - "HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\VLC media player"
+
   - "HKLM:\\SOFTWARE\\WOW6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\VLC media player"
