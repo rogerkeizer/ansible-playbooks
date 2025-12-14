@@ -1,0 +1,32 @@
+    - name: Ensure C:\Temp exists for installer
+      ansible.windows.win_file:
+        path: "C:\\Temp"
+        state: directory
+
+    - name: Download VS Code installer to C:\Temp
+      ansible.windows.win_get_url:
+        url: "{{ vscode_download_url }}"
+        dest: "{{ vscode_installer_path }}"
+
+    - name: Install VS Code silently system-wide with log
+      ansible.windows.win_command: >
+        "{{ vscode_installer_path }}"
+        /VERYSILENT /NORESTART /MERGETASKS=!runcode
+        /LOG="C:\\Temp\\vscode_install.log"
+      args:
+        creates: "{{ vscode_program_path }}"
+
+    - name: Verify VS Code installation
+      ansible.windows.win_stat:
+        path: "{{ vscode_program_path }}"
+      register: vscode_folder_post
+
+    - name: Remove VS Code installer after successful installation
+      ansible.windows.win_file:
+        path: "{{ vscode_installer_path }}"
+        state: absent
+      when: vscode_folder_post.stat.exists
+
+    - name: Show VS Code installation status
+      debug:
+        msg: "VS Code installed: {{ vscode_folder_post.stat.exists }}"

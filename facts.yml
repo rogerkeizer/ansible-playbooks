@@ -1,0 +1,159 @@
+- name: Gather full system inventory from Windows hosts
+  hosts: win
+  gather_facts: no
+
+  tasks:
+
+    # ----------------------
+    # Disk Facts
+    # ----------------------
+    - name: Get disk facts
+      win_disk_facts:
+
+    - name: Register system disk info
+      set_fact:
+        system_disk: "{{ ansible_facts.disks | selectattr('system_disk') | first }}"
+        disks: "{{ ansible_facts.disks }}"
+
+    - name: Show first system disk size
+      debug:
+        msg: "Disk: {{ system_disk.model | default('Unknown') }} Size: {{ (system_disk.size / 1024 / 1024 / 1024) | round }} GiB Human: {{ system_disk.size | filesizeformat(true) }}"
+
+    # ----------------------
+    # CPU Facts
+    # ----------------------
+    - name: Get CPU facts
+      win_shell: |
+        Get-CimInstance Win32_Processor |
+        Select-Object Caption, DeviceID, Name, NumberOfCores, MaxClockSpeed, Status |
+        ConvertTo-Json
+      register: cpu_info
+
+    - name: Register CPU facts
+      set_fact:
+        cpu_facts: "{{ cpu_info.stdout | from_json }}"
+
+    # ----------------------
+    # Memory and OS Facts
+    # ----------------------
+    - name: Get OS info
+      win_shell: |
+        Get-CimInstance Win32_OperatingSystem |
+        Select-Object Caption, Version, BuildNumber, OSArchitecture, LastBootUpTime, FreePhysicalMemory, TotalVisibleMemorySize |
+        ConvertTo-Json
+      register: os_info
+
+    - name: Register OS facts
+      set_fact:
+        os_facts: "{{ os_info.stdout | from_json }}"
+
+    - name: Calculate free memory percentage
+      set_fact:
+        mem_free_percent: "{{ (os_facts.FreePhysicalMemory / os_facts.TotalVisibleMemorySize * 100) | round(2) }}"
+
+    # ----------------------
+    # GPU Facts
+    # ----------------------
+    - name: Get GPU info
+      win_shell: |
+        Get-CimInstance Win32_VideoController |
+        Select-Object Name, AdapterRAM, DriverVersion |
+        ConvertTo-Json
+      register: gpu_info
+
+    - name: Register GPU facts
+      set_fact:
+        gpu_facts: "{{ gpu_info.stdout | from_json }}"
+
+    # ----------------------
+    # Network Facts
+    # ----------------------
+    - name: Get network adapters
+      win_shell: |
+        Get-CimInstance Win32_NetworkAdapterConfiguration |
+        Where-Object { $_.IPEnabled } |
+        Select-Object Description, MACAddress, IPAddress, DefaultIPGateway |
+        ConvertTo-Json
+      register: net_info
+
+    - name: Register network facts
+      set_fact:
+        net_facts: "{{ net_info.stdout | from_json }}"
+
+    # ----------------------
+    # Installed Programs
+    # ----------------------
+    - name: Get installed programs
+      win_shell: |
+        Get-CimInstance Win32_Product |
+        Select-Object Name, Version |
+        ConvertTo-Json
+      register: programs_info
+
+    - name: Register programs facts
+      set_fact:
+        programs_facts: "{{ programs_info.stdout | from_json }}"
+
+    # ----------------------
+    # Running Services
+    # ----------------------
+    - name: Get running services
+      win_shell: |
+        Get-Service | Where-Object { $_.Status -eq 'Running' } |
+        Select-Object Name, DisplayName, Status |
+        ConvertTo-Json
+      register: services_info
+
+    - name: Register services facts
+      set_fact:
+        services_facts: "{{ services_info.stdout | from_json }}"
+
+    # ----------------------
+    # Windows Updates
+    # ----------------------
+    - name: Get installed Windows updates
+      win_shell: |
+        Get-HotFix | Select-Object Description, HotFixID, InstalledOn | ConvertTo-Json
+      register: updates_info
+
+    - name: Register updates facts
+      set_fact:
+        updates_facts: "{{ updates_info.stdout | from_json }}"
+
+    # ----------------------
+    # System Performance
+    # ----------------------
+    - name: Get CPU load percentage
+      win_shell: |
+        Get-CimInstance Win32_Processor | Select-Object LoadPercentage | ConvertTo-Json
+      register: cpu_load
+
+    - name: Register CPU load facts
+      set_fact:
+        cpu_load_facts: "{{ cpu_load.stdout | from_json }}"
+
+    - name: Remote execute simple commands (hostname and date)
+      win_shell: |
+        hostname
+        Get-Date
+      register: scriptoutput
+
+    - name: Show script output
+      debug:
+        var: scriptoutput.stdout
+
+    # ----------------------
+    # Optional summary debug
+    # ----------------------
+    - name: Show summary facts
+      debug:
+        msg:
+          CPU: "{{ cpu_facts }}"
+          Memory_free_percent: "{{ mem_free_percent }}%"
+          OS: "{{ os_facts.Caption }} {{ os_facts.Version }}"
+          GPU: "{{ gpu_facts }}"
+          Disks: "{{ disks }}"
+          Network: "{{ net_facts }}"
+          Programs_count: "{{ programs_facts | length }}"
+          Services_running: "{{ services_facts | length }}"
+          Updates_count: "{{ updates_facts | length }}"

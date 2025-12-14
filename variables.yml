@@ -1,0 +1,25 @@
+choco_location: "C:\\ProgramData\\chocolatey"
+
+nuget_cache_location: "C:\\Users\\{{ ansible_user }}\\AppData\\Local\\NuGet\\Cache"
+
+# Notepad++
+notepadpp_product_id: notepad++
+notepadpp_product_name: notepadplusplus
+notepadpp_version: 8.8.8
+notepadpp_install_location: "C:\\Program Files\\Notepad++"
+notepadpp_user_location: "C:\\Users\\{{ ansible_user }}\\AppData\\Roaming\\Notepad++"
+notepadpp_install_args: /S
+
+# Visual Studio Code (system-wide)
+vscode_program_path: "C:\\Program Files\\Microsoft VS Code"
+vscode_installer_path: "C:\\Temp\\VSCodeSetup.exe"
+vscode_download_url: "https://update.code.visualstudio.com/latest/win32-x64/stable"
+vscode_uninstaller_path: "C:\\Program Files\\Microsoft VS Code\\Unins000.exe"
+
+# VLC Media player
+vlc_program_path: "C:\\Program Files\\VideoLAN\\VLC"
+vlc_installer_path: "C:\\Temp\\vlc-installer.exe"
+vlc_download_url: "https://get.videolan.org/vlc/3.0.21/win64/vlc-3.0.21-win64.exe"
+vlc_registry_keys:
+  - "HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\VLC media player"
+  - "HKLM:\\SOFTWARE\\WOW6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\VLC media player"

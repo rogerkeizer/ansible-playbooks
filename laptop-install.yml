@@ -1,0 +1,37 @@
+---
+- name: Install software on laptop
+  hosts: win
+  vars_files:
+      - variables.yml
+
+  tasks:
+  - name: "Check if Chocolatey is installed"
+    win_command: choco -v
+    register: choco_check
+    ignore_errors: yes
+
+  - name: "Inform user that Chocolatey is not installed"
+    debug:
+      msg: "Chocolatey not detected. Chocolatey installing..."
+    when: choco_check.failed
+
+  - name: "Ensure Chocolatey is installed"
+    win_chocolatey:
+      name: chocolatey
+      state: present
+      
+  - name: Upgrade all Chocolatey packages (noop to refresh registry)
+    win_command: choco upgrade all --noop
+
+  - name: "Task: install Notepad ++"
+    ansible.builtin.import_tasks:
+      file: notepad-plusplus-install.yml
+
+  - name: "Task: install Visual Studio Code"
+    ansible.builtin.import_tasks:
+      file: vscode-install.yml
+
+  - name: "Task: install VLC Media player"
+    ansible.builtin.import_tasks:
+      file: vlc-install.yml
+      

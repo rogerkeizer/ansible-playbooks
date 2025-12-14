@@ -1,0 +1,29 @@
+    - name: Check if VS Code folder exists
+      ansible.windows.win_stat:
+        path: "{{ vscode_program_path }}"
+      register: vscode_folder
+
+    - name: Remove VS Code folder including unins000.exe
+      ansible.windows.win_file:
+        path: "{{ vscode_program_path }}"
+        state: absent
+      when: vscode_folder.stat.exists
+
+    - name: Verify VS Code folder removed
+      ansible.windows.win_stat:
+        path: "{{ vscode_program_path }}"
+      register: vscode_removed
+
+    - name: Remove only VS Code installer files from C:\Temp
+      ansible.windows.win_file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - "C:\\Temp\\VSCodeSetup.exe"
+        - "C:\\Temp\\VSCodeUserSetup-x64-*.exe"
+        - "C:\\Temp\\vscode_install.log"
+      ignore_errors: yes
+
+    - name: Show cleanup status
+      debug:
+        msg: "VS Code folder and uninstaller removed: {{ not vscode_removed.stat.exists }}"

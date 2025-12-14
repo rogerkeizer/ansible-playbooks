@@ -1,0 +1,25 @@
+- name: Gather and sort Windows updates
+  hosts: win
+  gather_facts: no
+
+  tasks:
+
+    - name: Get installed Windows updates sorted by InstalledOn descending
+      win_shell: |
+        Get-HotFix |
+        Sort-Object InstalledOn -Descending |
+        Select-Object Description, HotFixID, InstalledOn |
+        ConvertTo-Json
+      register: updates_info
+
+    - name: Register updates facts
+      set_fact:
+        updates_facts: "{{ updates_info.stdout | from_json }}"
+
+    - name: Show x most recent updates
+      debug:
+        msg: "{{ updates_facts[:10] }}"
+
+    - name: Show total number of updates
+      debug:
+        msg: "Total installed updates: {{ updates_facts | length }}"

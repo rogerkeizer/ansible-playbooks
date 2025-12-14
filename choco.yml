@@ -1,0 +1,30 @@
+---
+- name: Install or upgrade Chocolatey on Windows 11
+  gather_facts: yes
+  hosts: win
+
+  tasks:
+    - name: Check if Chocolatey is installed
+      ansible.windows.win_stat:
+        path: "C:\\ProgramData\\chocolatey\\bin\\choco.exe"
+      register: choco_check
+
+    - name: Install Chocolatey (if not installed)
+      ansible.windows.win_powershell:
+        script: |
+          Set-ExecutionPolicy Bypass -Scope Process -Force;
+          [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072;
+          iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+      when: not choco_check.stat.exists
+
+    - name: Upgrade Chocolatey (if already installed)
+      ansible.windows.win_command: choco upgrade chocolatey -y
+      when: choco_check.stat.exists
+
+    - name: Verify Chocolatey version
+      ansible.windows.win_command: choco --version
+      register: choco_version
+
+    - name: Show version
+      ansible.builtin.debug:
+        var: choco_version.stdout

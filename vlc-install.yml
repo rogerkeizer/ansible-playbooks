@@ -1,0 +1,40 @@
+# to use standalone uncomment below lines
+
+#---
+#- name: "Install VLC on Windows 11 using win_package (not Choco)"
+#  hosts: win
+#  gather_facts: yes
+#
+#  vars:
+#    vlc_program_path: "C:\\Program Files\\VideoLAN\\VLC"
+#    vlc_installer_path: "C:\\Temp\\vlc-installer.exe"
+#    vlc_download_url: "https://get.videolan.org/vlc/3.0.21/win64/vlc-3.0.21-win64.exe"
+#
+#  tasks: 
+    - name: Create temporary folder for VLC installer
+      ansible.windows.win_file:
+        path: "C:\\Temp"
+        state: directory
+
+    - name: "Download VLC installer"
+      win_get_url:
+        url: "{{ vlc_download_url }}"
+        dest: "{{ vlc_installer_path }}"
+
+    - name: "Install VLC silently"
+      win_package:
+        path: "{{ vlc_installer_path }}"
+        arguments: /L=1033 /S
+        state: present
+        product_id: VLC media player
+
+    - name: "Verify VLC installation"
+      ansible.windows.win_stat:
+        path: "{{ vlc_program_path }}"
+      register: vlc_folder
+
+    - name: "Remove VLC installer after successful installation"
+      ansible.windows.win_file:
+        path: "{{ vlc_installer_path }}"
+        state: absent
+      when: vlc_folder.stat.exists

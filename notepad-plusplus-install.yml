@@ -1,0 +1,19 @@
+# Notepad++
+- name: "Install {{ notepadpp_product_id }} version {{ notepadpp_version }}"
+  win_chocolatey:
+    name: "{{ notepadpp_product_name }}"
+    version: "{{ notepadpp_version }}"
+    install_args: "{{ notepadpp_install_args }}"
+    state: latest
+    force: yes
+
+#- name: "Create config.model.xml to disable auto-update"
+#  ansible.windows.win_copy:
+#    content: |
+#        <?xml version="1.0" encoding="UTF-8" ?>
+#        <NotepadPlus>
+#            <GUIConfigs>
+#                <GUIConfig name="noUpdate">yes</GUIConfig>
+#            </GUIConfigs>
+#        </NotepadPlus>
+#    dest: "{{ notepadpp_install_location }}\\config.model.xml"

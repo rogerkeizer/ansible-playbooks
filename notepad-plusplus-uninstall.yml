@@ -1,0 +1,93 @@
+  # NOTEPAD++
+  - name: "Kill all running Notepad++ processes"
+    ansible.windows.win_shell: |
+      Get-Process notepad++ -ErrorAction SilentlyContinue | Stop-Process -Force
+    ignore_errors: true
+
+  - name: "Gather stats for {{ notepadpp_install_location }}"
+    win_stat:
+      path: "{{ notepadpp_install_location }}"
+    register: notepadpp_dir
+
+  - name: "Debug install directory"
+    debug:
+      msg: "{{ notepadpp_install_location }} does not exist"
+    when: not notepadpp_dir.stat.exists
+
+  - name: "Gather stats for {{ notepadpp_user_location }}"
+    win_stat:
+      path: "{{ notepadpp_user_location }}"
+    register: notepadpp_user_dir
+
+  - name: "Debug user directory"
+    debug:
+      msg: "{{ notepadpp_user_location }} does not exist"
+    when: not notepadpp_user_dir.stat.exists
+
+  - name: "Uninstall {{ notepadpp_product_id }} version {{ notepadpp_version }}"
+    win_package:
+      path: "{{ notepadpp_install_location }}\\uninstall.exe"
+      arguments: /S
+      product_id: "{{ notepadpp_product_id }}"
+      state: absent
+    ignore_errors: true
+    when: notepadpp_dir.stat.exists == True
+
+  - name: "Uninstall {{ notepadpp_product_id}}.install version {{ notepadpp_version }}"
+    win_chocolatey:
+      name: "{{ notepadpp_product_id}}.install"
+      version: "{{ notepadpp_version }}"
+      state: absent
+      force: yes
+
+  - name: "Remove directory for {{ notepadpp_product_id }}"
+    win_file:
+      path: "{{ notepadpp_install_location }}"
+      state: absent
+    when: notepadpp_dir.stat.exists == True
+    ignore_errors: true
+
+  - name: "Remove directory for {{ notepadpp_user_location }}"
+    win_file:
+      path: "{{ notepadpp_user_location }}"
+      state: absent
+    when: notepadpp_user_dir.stat.exists == True
+    
+  - name: "Clear and remove Registry Keys for {{ notepadpp_product_id}}"
+    win_regedit:
+      path: "{{ item }}"
+      state: absent
+      delete_key: yes
+    with_items:
+      - "HKLM:\\SOFTWARE\\Notepad++"
+      - "HKLM:\\SOFTWARE\\WOW6432Node\\Notepad++"
+
+  - name: "Remove Chocolatey, Nuget files and shortcut for {{ notepadpp_product_id}}"
+    win_file:
+      path: "{{ item }}"
+      state: absent
+    with_items:
+      - "{{choco_location}}\\lib\\{{notepadpp_product_name}}"
+      - "{{choco_location}}\\lib\\{{notepadpp_product_name}}.install"
+      - "{{choco_location}}\\.chocolatey\\{{notepadpp_product_name}}.{{notepadpp_version}}"
+      - "{{choco_location}}\\.chocolatey\\{{notepadpp_product_name}}.install.{{notepadpp_version}}"
+      - "{{nuget_cache_location}}\\{{notepadpp_product_name}}.install.{{notepadpp_version}}.nupkg"
+      - "{{notepadpp_user_location}}"
+      - "C:\\ProgramData\\Microsoft\\Windows\\Start Menu\\Programs\\Notepad++.lnk"
+
+  - name: "After uninstalling Notepad++"
+    ansible.builtin.debug:
+      msg: 
+      - "{{ notepadpp_install_location }}\\contextMenu\\nppshell.dll might be on disk because it hooks into the shell." 
+      - "You have to delete it after a reboot."
+
+#  - name: "Schedule nppshell.dll for deletion on reboot"
+#    ansible.windows.win_shell: |
+#      $dll64 = "C:\Program Files\Notepad++\contextMenu\nppshell.dll"
+#      $dll32 = "C:\Program Files (x86)\Notepad++\contextMenu\nppshell.dll"
+#      foreach ($dll in @($dll64, $dll32)) {
+#          if (Test-Path $dll) {
+#              cmd.exe /c "del /f /q $dll" 2>$null
+#          }
+#      }
+#    ignore_errors: true

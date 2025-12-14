@@ -1,0 +1,81 @@
+# to use standalone uncomment below lines
+
+#---
+#- name: "Uninstall VLC installed via win_package"
+#  hosts: win
+#  gather_facts: yes
+#
+#  vars:
+#    vlc_program_path: "C:\\Program Files\\VideoLAN\\VLC"
+#    vlc_registry_keys:
+#      - "HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\VLC media player"
+#      - "HKLM:\\SOFTWARE\\WOW6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\VLC media player"
+#
+#  tasks:
+    - name: "Check if VLC folder exists"
+      ansible.windows.win_stat:
+        path: "{{ vlc_program_path }}"
+      register: vlc_folder
+
+    - name: "Check VLC registry keys"
+      ansible.windows.win_reg_stat:
+        path: "{{ item }}"
+      loop: "{{ vlc_registry_keys }}"
+      register: vlc_registry_results
+
+    - name: "Determine if VLC is installed"
+      set_fact:
+        vlc_installed: "{{ vlc_folder.stat.exists or (vlc_registry_results.results | selectattr('exists') | list | length > 0) }}"
+
+    - name: "Show VLC installation status"
+      debug:
+        msg: "VLC is installed: {{ vlc_installed }}"
+
+    - name: "Uninstall VLC using win_package"
+      win_package:
+        product_id: "VLC media player"
+        state: absent
+      when: vlc_installed
+
+    - name: "Delete VLC desktop shortcut"
+      ansible.windows.win_file:
+        path: "C:\\Users\\Public\\Desktop\\VLC media player.lnk"
+        state: absent
+      when: vlc_installed
+
+    - name: "Delete leftover VLC folder"
+      win_file:
+        path: "C:\\Program Files\\VideoLAN"
+        state: absent
+      when: vlc_installed
+
+    - name: "Delete VLC config folder"
+      win_file:
+        path: "C:\\Users\\legion\\AppData\\Roaming\\vlc"
+        state: absent
+      when: vlc_installed
+
+    - name: "Delete Start Menu folder"
+      ansible.windows.win_file:
+        path: "C:\\ProgramData\\Microsoft\\Windows\\Start Menu\\Programs\\VideoLan"
+        state: absent
+      when: vlc_installed
+
+    # https://videolan.videolan.me/libdvdcss/
+    - name: "Delete dvdcss folder"
+      ansible.windows.win_file:
+        path: "C:\\Users\\legion\\AppData\\Roaming\\dvdcss"
+        state: absent
+      when: vlc_installed
+
+    - name: "Clear and remove Registry Keys for VLC"
+      win_regedit:
+        path: "{{ item }}"
+        state: absent
+        delete_key: yes
+      loop: "{{ vlc_registry_keys }}"
+      #with_items:
+      #  - "HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\VLC media player"
+      #  - "HKLM:\\SOFTWARE\\WOW6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\VLC media player"
+      when: vlc_installed
+      ignore_errors: yes

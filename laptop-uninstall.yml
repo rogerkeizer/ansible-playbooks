@@ -1,0 +1,19 @@
+- name: "Uninstall software from laptop"
+  hosts: win
+  vars_files:
+      - variables.yml
+
+  tasks:
+  - win_command: whoami /all
+
+  - name: "Task: Uninstall Notepad++"
+    ansible.builtin.import_tasks:
+      file: notepad-plusplus-uninstall.yml
+
+  - name: "Task: Uninstall Visual Studio Code"
+    ansible.builtin.import_tasks:
+      file: vscode-uninstall.yml
+
+  - name: "Task: Uninstall VLC Media player"
+    ansible.builtin.import_tasks:
+      file: vlc-uninstall.yml
