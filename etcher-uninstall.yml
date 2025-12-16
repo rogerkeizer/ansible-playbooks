@@ -1,0 +1,13 @@
+- name: "Uninstall Etcher (per-user) via Chocolatey"
+  hosts: win
+  gather_facts: no
+  tasks:
+    - name: "Uninstall Etcher"
+      win_chocolatey:
+        name: etcher
+        state: absent
+
+    - name: "Remove Etcher AppData directory"
+      win_file:
+        path: C:\Users\{{ ansible_user }}\AppData\Local\balena_etcher
+        state: absent

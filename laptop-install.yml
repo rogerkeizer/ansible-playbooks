@@ -34,4 +34,8 @@
   - name: "Task: install VLC Media player"
     ansible.builtin.import_tasks:
       file: vlc-install.yml
+
+  - name: "Task: install Etcher"
+    ansible.builtin.import_tasks:
+      file: etcher-install.yml
       

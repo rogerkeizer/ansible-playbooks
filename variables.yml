@@ -23,5 +23,7 @@ vlc_installer_path: "C:\\Temp\\vlc-installer.exe"
 vlc_download_url: "https://get.videolan.org/vlc/3.0.21/win64/vlc-3.0.21-win64.exe"
 vlc_registry_keys:
   - "HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\VLC media player"
-
   - "HKLM:\\SOFTWARE\\WOW6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\VLC media player"
+
+# Balena Etcher
+be_temp_installer_path: C:\Temp\balenaEtcher-setup-latest.exe

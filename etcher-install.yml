@@ -1,0 +1,32 @@
+- name: "Get latest Etcher release info"
+  uri:
+    url: https://api.github.com/repos/balena-io/etcher/releases/latest
+    return_content: yes
+  # run uri locally on the Ansible controller, not on the Windows host  
+  delegate_to: localhost
+  register: release_info
+
+- name: "Parse installer download URL"
+  set_fact:
+    etcher_installer_url: >-
+      {{
+        (release_info.json.assets
+         | selectattr('name','match','.*Setup.exe$')
+         | list)[0].browser_download_url
+      }}
+
+- name: "Download latest Etcher installer"
+  win_get_url:
+    url: "{{ etcher_installer_url }}"
+    dest: "{{ be_temp_installer_path }}"
+
+- name: "Install Etcher silently"
+  win_package:
+    path: "{{ be_temp_installer_path }}"
+    arguments: /S
+    state: present
+
+- name: "Remove Etcher installer from Temp folder"
+  win_file:
+    path: "{{ be_temp_installer_path }}"
+    state: absent
