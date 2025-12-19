@@ -1,0 +1,25 @@
+---
+- name: "Uninstall Rufus system-wide from Windows 11"
+  hosts: win
+  gather_facts: no
+  vars:
+    rufus_dir: 'C:\\Program Files\\Rufus'
+    start_menu_dir: 'C:\\ProgramData\\Microsoft\\Windows\\Start Menu\\Programs'
+
+  tasks:
+    - name: "Remove Rufus Start Menu shortcut"
+      ansible.windows.win_file:
+        path: "{{ start_menu_dir }}\\Rufus.lnk"
+        state: absent
+
+    - name: "Remove Rufus directory from system PATH"
+      ansible.windows.win_environment:
+        state: absent
+        name: PATH
+        value: "{{ rufus_dir }}"
+        level: machine
+
+    - name: "Remove Rufus installation directory"
+      ansible.windows.win_file:
+        path: "{{ rufus_dir }}"
+        state: absen

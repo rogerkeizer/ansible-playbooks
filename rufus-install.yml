@@ -1,0 +1,35 @@
+---
+- name: "Install Rufus system-wide on Windows 11"
+  hosts: win
+  gather_facts: yes # to populate ansible_env
+  vars:
+    rufus_dir: "C:\\Program Files\\Rufus"
+    rufus_exe: "rufus.exe"
+    rufus_url: "https://github.com/pbatard/rufus/releases/download/v4.11/rufus-4.11p.exe"
+    start_menu_dir: "C:\\ProgramData\\Microsoft\\Windows\\Start Menu\\Programs"
+
+  tasks:
+    - name: "Ensure Rufus installation directory exists"
+      ansible.windows.win_file:
+        path: "{{ rufus_dir }}"
+        state: directory
+
+    - name: "Download Rufus executable"
+      ansible.windows.win_get_url:
+        url: "{{ rufus_url }}"
+        dest: "{{ rufus_dir }}\\{{ rufus_exe }}"
+        force: yes
+
+    - name: Create Start Menu shortcut for all users
+      community.windows.win_shortcut:
+        src: "{{ rufus_dir }}\\{{ rufus_exe }}"
+        dest: "{{ start_menu_dir }}\\Rufus.lnk"
+        icon: "{{ rufus_dir }}\\{{ rufus_exe }},0"
+
+    - name: "Add Rufus directory to system PATH"
+      ansible.windows.win_environment:
+        state: present
+        name: PATH
+        value: "{{ ansible_env.Path }};{{ rufus_dir }}"
+        level: machine
+    
