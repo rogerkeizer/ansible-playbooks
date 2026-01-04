@@ -1,0 +1,37 @@
+---
+- name: Install Mullvad Browser on Windows 11
+  hosts: windows
+  gather_facts: no
+
+  vars:
+    mullvad_version: "15.0.3"
+    mullvad_name: "mullvad-browser-windows-x86_64-{{ mullvad_version }}.exe"
+    mullvad_exe_url: "https://github.com/mullvad/mullvad-browser/releases/download/{{ mullvad_version }}/{{ mullvad_name }}"
+    temp_dir: "C:\\Temp"
+    installer_name: "MullvadBrowserInstaller.exe"
+    installer_path: "{{ temp_dir }}\\{{ installer_name }}"
+
+  tasks:
+    - name: Ensure temp directory exists
+      ansible.windows.win_file:
+        path: "{{ temp_dir }}"
+        state: directory
+
+    - name: Download Mullvad Browser installer (latest)
+      ansible.windows.win_get_url:
+        url: "{{ mullvad_exe_url }}"
+        dest: "{{ installer_path }}"
+        force: yes
+
+    - name: Install Mullvad Browser silently
+      ansible.windows.win_package:
+        path: "{{ installer_path }}"
+        arguments: "/S"
+        state: present
+      register: mullvad_install
+
+    - name: Delete installer from temp
+      ansible.windows.win_file:
+        path: "{{ installer_path }}"
+        state: absent
+      when: mullvad_install.changed
